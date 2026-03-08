@@ -303,32 +303,38 @@ export async function sendTimbotGroupMessage(params: {
   }
 }
 
-// 从 MsgBody 提取文本内容
-function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: { Text?: string } }>): string {
+// 从 MsgBody 提取文本内容和图片地址
+function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: { Text?: string; UUID?: string; ImageInfoArray?: Array<{ Type: number; URL: string }> } }>): string {
   if (!msgBody || !Array.isArray(msgBody)) return "";
 
-  const texts: string[] = [];
+  const parts: string[] = [];
   for (const elem of msgBody) {
     if (elem.MsgType === "TIMTextElem" && elem.MsgContent?.Text) {
-      texts.push(elem.MsgContent.Text);
-    } else if (elem.MsgType === "TIMCustomElem") {
-      texts.push("[custom]");
+      parts.push(elem.MsgContent.Text);
     } else if (elem.MsgType === "TIMImageElem") {
-      texts.push("[image]");
+      // 提取图片地址，优先使用大图(Type=2)，其次原图(Type=1)，最后缩略图(Type=3)
+      const imageInfo = elem.MsgContent?.ImageInfoArray?.find(img => img.Type === 2)
+        ?? elem.MsgContent?.ImageInfoArray?.find(img => img.Type === 1)
+        ?? elem.MsgContent?.ImageInfoArray?.find(img => img.Type === 3);
+      if (imageInfo?.URL) {
+        parts.push(`MEDIA:{${imageInfo.URL}}`);
+      }
+    } else if (elem.MsgType === "TIMCustomElem") {
+      parts.push("[custom]");
     } else if (elem.MsgType === "TIMSoundElem") {
-      texts.push("[voice]");
+      parts.push("[voice]");
     } else if (elem.MsgType === "TIMFileElem") {
-      texts.push("[file]");
+      parts.push("[file]");
     } else if (elem.MsgType === "TIMVideoFileElem") {
-      texts.push("[video]");
+      parts.push("[video]");
     } else if (elem.MsgType === "TIMFaceElem") {
-      texts.push("[face]");
+      parts.push("[face]");
     } else if (elem.MsgType === "TIMLocationElem") {
-      texts.push("[location]");
+      parts.push("[location]");
     }
   }
 
-  return texts.join("\n");
+  return parts.join("\n");
 }
 
 // 处理消息并回复
@@ -352,8 +358,10 @@ async function processAndReply(params: {
     return;
   }
 
-  // 过滤纯占位符消息（如 [custom]、[image] 等），这些通常是系统消息或输入状态
-  if (/^\[.+\]$/.test(rawBody.trim())) {
+  // 过滤纯占位符消息（如 [custom]、[voice]、[file] 等），这些通常是系统消息或输入状态
+  // 注意：图片已转换为 MEDIA:{xxx}，不在此过滤范围内
+  const placeholderPattern = /^\[(?:custom|voice|file|video|face|location)\]$/i;
+  if (placeholderPattern.test(rawBody.trim())) {
     log(target, "warn", `占位符消息，跳过处理: ${rawBody} (from: ${fromAccount})`);
     return;
   }
@@ -482,7 +490,9 @@ async function processGroupAndReply(params: {
     return;
   }
 
-  if (/^\[.+\]$/.test(rawBody.trim())) {
+  // 过滤纯占位符消息（如 [custom]、[voice]、[file] 等），这些通常是系统消息或输入状态
+  const placeholderPattern = /^\[(?:custom|voice|file|video|face|location)\]$/i;
+  if (placeholderPattern.test(rawBody.trim())) {
     log(target, "warn", `群占位符消息，跳过处理: ${rawBody} (group: ${groupId}, from: ${fromAccount})`);
     return;
   }

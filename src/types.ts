@@ -43,6 +43,15 @@ export type TimbotMsgBodyElement = {
   MsgType: string;
   MsgContent: {
     Text?: string;
+    // 图片消息字段
+    UUID?: string;
+    ImageInfoArray?: Array<{
+      Type: number; // 1:原图, 2:大图, 3:缩略图
+      Size: number;
+      Width: number;
+      Height: number;
+      URL: string;
+    }>;
     // 可扩展其他消息类型的字段
     [key: string]: unknown;
   };
