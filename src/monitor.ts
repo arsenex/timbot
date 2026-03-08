@@ -366,6 +366,8 @@ async function processAndReply(params: {
     return;
   }
 
+  log(target, "warn", `开始处理消息: ${rawBody} (from: ${fromAccount}, to: ${account.accountId})`);
+  
   logVerbose(target, `开始处理消息, 账号: ${account.accountId}`);
 
   const route = core.channel.routing.resolveAgentRoute({
