@@ -317,7 +317,7 @@ function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: {
         ?? elem.MsgContent?.ImageInfoArray?.find(img => img.Type === 1)
         ?? elem.MsgContent?.ImageInfoArray?.find(img => img.Type === 3);
       if (imageInfo?.URL) {
-        parts.push(`MEDIA:{${imageInfo.URL}}`);
+        parts.push(`MEDIA:${imageInfo.URL}`);
       }
     } else if (elem.MsgType === "TIMCustomElem") {
       parts.push("[custom]");
@@ -367,7 +367,7 @@ async function processAndReply(params: {
   }
 
   log(target, "warn", `开始处理消息: ${rawBody} (from: ${fromAccount}, to: ${account.accountId})`);
-  
+
   logVerbose(target, `开始处理消息, 账号: ${account.accountId}`);
 
   const route = core.channel.routing.resolveAgentRoute({
