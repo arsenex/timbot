@@ -328,7 +328,7 @@ function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: {
         ?? elem.MsgContent?.ImageInfoArray?.find(img => img.Type === 1)
         ?? elem.MsgContent?.ImageInfoArray?.find(img => img.Type === 3);
       if (imageInfo?.URL) {
-        parts.push(`MEDIA:${imageInfo.URL}`);
+        parts.push(`{ MEDIA:${imageInfo.URL} }`);
       }
     } else if (elem.MsgType === "TIMCustomElem") {
       parts.push("[custom]");
@@ -337,10 +337,8 @@ function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: {
     } else if (elem.MsgType === "TIMFileElem") {
       // 检查是否是 PDF 或 docx 文件，通过 FileName 字段判断
       const fileName = elem.MsgContent?.FileName?.toLowerCase() || "";
-      if (fileName.endsWith(".pdf") && elem.MsgContent?.Url) {
-        parts.push(`pdf:${elem.MsgContent.Url}`);
-      } else if (fileName.endsWith(".docx") && elem.MsgContent?.Url) {
-        parts.push(`pdf:${elem.MsgContent.Url}`);
+      if ((fileName.endsWith(".pdf") || fileName.endsWith(".docx")) && elem.MsgContent?.Url) {
+        parts.push(`{ pdf:${elem.MsgContent.Url} }`);
       } else {
         parts.push("[file]");
       }
@@ -457,12 +455,7 @@ async function processAndReply(params: {
     cfg: config,
     dispatcherOptions: {
       deliver: async (payload) => {
-        const originalText = payload.text ?? "";
-        // 打印原始文本用于调试
-        logVerbose(target, `AI 回复原始文本: ${originalText}`);
-        const text = core.channel.text.convertMarkdownTables(originalText, tableMode);
-        // 打印转换后文本用于对比
-        logVerbose(target, `AI 回复转换后文本: ${text}`);
+        const text = core.channel.text.convertMarkdownTables(payload.text ?? "", tableMode);
         if (!text.trim()) return;
 
         const result = await sendTimbotMessage({
