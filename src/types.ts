@@ -52,6 +52,9 @@ export type TimbotMsgBodyElement = {
       Height: number;
       URL: string;
     }>;
+    // 文件消息字段
+    FileName?: string;
+    Url?: string;
     // 可扩展其他消息类型的字段
     [key: string]: unknown;
   };
