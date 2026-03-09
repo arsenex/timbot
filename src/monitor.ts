@@ -457,7 +457,12 @@ async function processAndReply(params: {
     cfg: config,
     dispatcherOptions: {
       deliver: async (payload) => {
-        const text = core.channel.text.convertMarkdownTables(payload.text ?? "", tableMode);
+        const originalText = payload.text ?? "";
+        // 打印原始文本用于调试
+        logVerbose(target, `AI 回复原始文本: ${originalText}`);
+        const text = core.channel.text.convertMarkdownTables(originalText, tableMode);
+        // 打印转换后文本用于对比
+        logVerbose(target, `AI 回复转换后文本: ${text}`);
         if (!text.trim()) return;
 
         const result = await sendTimbotMessage({
