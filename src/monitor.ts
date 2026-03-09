@@ -309,6 +309,9 @@ function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: {
 
   const parts: string[] = [];
   for (const elem of msgBody) {
+    // 打印日志 
+    logSimple("info", `处理 MsgBody 元素: MsgType=${elem.MsgType}, MsgContent=${JSON.stringify(elem.MsgContent)}`);
+    
     if (elem.MsgType === "TIMTextElem" && elem.MsgContent?.Text) {
       parts.push(elem.MsgContent.Text);
     } else if (elem.MsgType === "TIMImageElem") {
