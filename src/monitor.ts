@@ -171,7 +171,9 @@ export async function sendTimbotMessage(params: {
     MsgBody: [
       {
         MsgType: "TIMTextElem",
-        MsgContent: { Text: text.length > 100 ? text.slice(0, 100) + "..." : text },
+        // MsgContent: { Text: text.length > 100 ? text.slice(0, 100) + "..." : text },
+        // 发送完整的文本
+        MsgContent: { Text: text },
       },
     ],
   };
@@ -338,7 +340,7 @@ function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: {
       if (fileName.endsWith(".pdf") && elem.MsgContent?.Url) {
         parts.push(`pdf:${elem.MsgContent.Url}`);
       } else if (fileName.endsWith(".docx") && elem.MsgContent?.Url) {
-        parts.push(`MEDIA:${elem.MsgContent.Url}`);
+        parts.push(`pdf:${elem.MsgContent.Url}`);
       } else {
         parts.push("[file]");
       }
