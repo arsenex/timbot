@@ -304,7 +304,10 @@ export async function sendTimbotGroupMessage(params: {
 }
 
 // 从 MsgBody 提取文本内容和图片地址
-function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: { Text?: string; UUID?: string; ImageInfoArray?: Array<{ Type: number; URL: string }> } }>): string {
+function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: {
+  FileName: any;
+  Url: any; Text?: string; UUID?: string; ImageInfoArray?: Array<{ Type: number; URL: string }> 
+} }>): string {
   if (!msgBody || !Array.isArray(msgBody)) return "";
 
   const parts: string[] = [];
@@ -327,7 +330,15 @@ function extractTextFromMsgBody(msgBody?: Array<{ MsgType: string; MsgContent: {
     } else if (elem.MsgType === "TIMSoundElem") {
       parts.push("[voice]");
     } else if (elem.MsgType === "TIMFileElem") {
-      parts.push("[file]");
+      // 检查是否是 PDF或docx 文件，通过 FileName 字段判断
+      const fileName = elem.MsgContent?.FileName?.toString().toLowerCase() || "";
+      if (fileName.endsWith(".pdf") && elem.MsgContent?.Url) {
+        parts.push(`pdf:${elem.MsgContent.Url}`);
+      } else if (fileName.endsWith(".docx") && elem.MsgContent?.Url) {
+        parts.push(`MEDIA:${elem.MsgContent.Url}`);
+      } else {
+        parts.push("[file]");
+      }
     } else if (elem.MsgType === "TIMVideoFileElem") {
       parts.push("[video]");
     } else if (elem.MsgType === "TIMFaceElem") {
